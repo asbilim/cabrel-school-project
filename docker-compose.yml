@@ -1,0 +1,12 @@
+# Docker-Setup, um die Übungsaufgabe ohne zusätzliches Webserver-Setup auszuführen.
+version: "3.8"
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: cgv_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./CGV-P1:/usr/share/nginx/html:ro
+    restart: always

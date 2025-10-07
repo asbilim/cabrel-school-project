@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<!-- Hauptdokument der Simulation; liefert Struktur, Stil und die Verbindung zum Babylon.js-Skript. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8">
+    <title>CGV-Aufgabe 1</title>
+    <!-- Responsives Verhalten sicherstellen, damit das Interface auf unterschiedlich großen Displays funktioniert. -->
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Babylon.js Kernbibliothek asynchron laden, damit der Browser den HTML-Aufbau nicht blockiert. -->
+    <script defer src="js/babylon.js"></script>
+	<style type="text/css">
+        /* Globale Layout-Vorgaben setzen: Vollbild-Canvas ohne Scrollbalken. */
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #040611;
+            color: #f5f7ff;
+        }
+
+        /* Canvas nimmt den gesamten Viewport ein und dient als Zeichenfläche der 3D-Szene. */
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Bedienpanel oben links als halbtransparente Karte mit Lesbarkeit auf dunklem Hintergrund. */
+        #ui-panel {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            backdrop-filter: blur(10px);
+            background: rgba(15, 20, 35, 0.75);
+            border: 1px solid rgba(120, 140, 200, 0.35);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            max-width: 18rem;
+            box-shadow: 0 12px 32px rgba(2, 8, 25, 0.55);
+        }
+
+        /* Überschrift im Panel hervorheben. */
+        #ui-panel h1 {
+            margin: 0 0 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Beschreibungstext im Panel mit leichter Transparenz versehen. */
+        #ui-panel p {
+            margin: 0 0 1rem;
+            font-size: 0.85rem;
+            line-height: 1.3rem;
+            color: rgba(226, 236, 255, 0.8);
+        }
+
+        /* Label für den Eingaberegler klar strukturiert darstellen. */
+        #ui-panel label {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        /* Numerische Eingabe optisch an das Panel-Thema anpassen. */
+        #ui-panel input[type="number"] {
+            width: 100%;
+            padding: 0.4rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid rgba(120, 140, 200, 0.6);
+            background: rgba(10, 15, 30, 0.9);
+            color: #f5f7ff;
+        }
+
+        /* Fokuszustand mit hellerem Rahmen markieren, um die Zugänglichkeit zu erhöhen. */
+        #ui-panel input[type="number"]:focus {
+            outline: none;
+            border-color: rgba(168, 198, 255, 0.9);
+        }
+
+        /* Liste der berechneten Werte eng mit dem Regler verbinden. */
+        #ui-panel dl {
+            margin: 1rem 0 0;
+            font-size: 0.78rem;
+        }
+
+        /* Bezeichnungen der Werte leicht absetzen. */
+        #ui-panel dt {
+            font-weight: 600;
+            margin-top: 0.45rem;
+        }
+
+        /* Ausgabezeilen dezenter gestalten, um die Hierarchie zu verdeutlichen. */
+        #ui-panel dd {
+            margin: 0.2rem 0 0;
+            color: rgba(226, 236, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Babylon.js zeichnet die komplette Szene in dieses Canvas-Element. -->
+    <canvas id="renderCanvas"></canvas>
+    <!-- Panel mit Steuerungsmöglichkeiten und erklärenden Live-Werten. -->
+    <section id="ui-panel">
+        <h1>Rotationen im Sonnensystem</h1>
+        <p>Steuern Sie die Umlaufdauer der Erde um die Sonne. Werte wie 0.1666, 1 oder 60 Minuten sind möglich.</p>
+        <!-- Numerische Eingabe für die Dauer eines simulierten Erdjahres. -->
+        <label for="yearMinutes">1 Erdumlauf in Minuten</label>
+        <input id="yearMinutes" type="number" min="0.01" max="999" step="0.0001" value="1">
+        <!-- Ausgaben der abhängigen Zeitspannen werden als Definitionsliste gruppiert. -->
+        <dl>
+            <dt>Erd-Tag</dt>
+            <dd id="earth-day-readout">—</dd>
+            <dt>Monat (Mondorbit)</dt>
+            <dd id="moon-month-readout">—</dd>
+            <dt>Satellit-Orbit</dt>
+            <dd id="satellite-readout">—</dd>
+            <dt>Simulations-Zeitskala</dt>
+            <dd id="time-scale-readout">—</dd>
+        </dl>
+    </section>
+    <!-- Anwendungslogik der Simulation nach dem Dokument laden. -->
+    <script defer src="js/script.js"></script>
+</body>
+</html>
