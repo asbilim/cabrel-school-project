@@ -196,6 +196,31 @@ function createSkybox(scene) {
 }
 
 /**
+ * Erzeugt eine Text-Tafel für einen Himmelskörper, die immer zur Kamera zeigt.
+ * @param {BABYLON.Scene} scene – die Babylon-Szene
+ * @param {string} name – eindeutiger Name für die Label-Ressourcen
+ * @param {string} text – der anzuzeigende Text
+ * @param {OrbitalBody} parent – der Himmelskörper, an den das Label geheftet wird
+ */
+function createLabel(scene, name, text, parent) {
+    const plane = BABYLON.MeshBuilder.CreatePlane(name + "_label_plane", {width: 1, height: 0.5}, scene);
+    plane.parent = parent.mesh;
+    plane.position.y = parent.mesh.getBoundingInfo().boundingSphere.radius + 0.2;
+    plane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+
+    const dynamicTexture = new BABYLON.DynamicTexture(name + "_label_texture", {width:256, height:128}, scene, true);
+    const material = new BABYLON.StandardMaterial(name + "_label_material", scene);
+    material.diffuseTexture = dynamicTexture;
+    material.emissiveColor = new BABYLON.Color3(1,1,1);
+    material.disableLighting = true;
+    material.backFaceCulling = false;
+    
+    dynamicTexture.drawText(text, null, 80, "bold 44px Arial", "white", "transparent", true);
+    plane.material = material;
+}
+
+
+/**
  * Leitet alle relevanten Zeitspannen aus der Vorgabe für ein Erdjahr ab.
  * @param {number} earthOrbitMinutes – Dauer eines simulierten Erdjahres
  * @returns {{earthOrbitMinutes:number, earthDayMinutes:number, moonOrbitMinutes:number, satelliteOrbitMinutes:number, marsOrbitMinutes:number, marsDayMinutes:number, timeScale:number}}
@@ -285,6 +310,7 @@ function init() {
     material: sunMaterial,
     basePosition: new BABYLON.Vector3(0, 0, 0)
   });
+  createLabel(scene, 'sunLabel', 'Sonne', sun);
 
   // Lichtquelle und Hilfsachsen sichtbar machen.
   configureLighting(scene, sun);
@@ -293,7 +319,7 @@ function init() {
   // Erde mit Textur, Achsenneigung und Basisparametern registrieren.
   const earthMaterial = createTexturedMaterial(scene, 'earthMat', 'assets/earth.jpg', {
     specularColor: new BABYLON.Color3(0.15, 0.15, 0.15),
-    emissiveColor: new BABYLON.Color3(0.08, 0.08, 0.08)
+    emissiveColor: new BABYLON.Color3(0, 0, 0)
   });
   const earth = system.createBody({
     name: 'Earth',
@@ -307,6 +333,7 @@ function init() {
     material: earthMaterial,
     axisTilt: (23.5 * Math.PI) / 180
   });
+  createLabel(scene, 'earthLabel', 'Erde', earth);
 
   // Mond als abhängiges Objekt der Erde mit Tidal-Locking hinzufügen.
   const moonMaterial = createTexturedMaterial(scene, 'moonMat', 'assets/moon.jpg', {
@@ -325,6 +352,7 @@ function init() {
     material: moonMaterial,
     lockedToParent: true
   });
+  createLabel(scene, 'moonLabel', 'Mond', moon);
 
   // Künstlichen Satelliten modellieren, der den Mond dreimal pro Umlauf umrundet.
   const satelliteMaterial = createTexturedMaterial(scene, 'satelliteMat', 'assets/metal.jpg', {
@@ -343,6 +371,48 @@ function init() {
     material: satelliteMaterial,
     lockedToParent: true
   });
+  createLabel(scene, 'satelliteLabel', 'Satellit', satellite);
+
+  // ANLEITUNG: HINZUFÜGEN EINES NEUEN PLANETEN
+  // Um einen neuen Planeten oder einen anderen Himmelskörper hinzuzufügen, folgen Sie diesen Schritten:
+  //
+  // 1. Material erstellen (optional, aber empfohlen):
+  //    - Verwenden Sie die Funktion `createTexturedMaterial`, um das Aussehen zu definieren.
+  //    - Sie benötigen eine Texturdatei im `assets`-Ordner.
+  //    - Beispiel:
+  //      const neuerPlanetMaterial = createTexturedMaterial(scene, 'neuerPlanetMat', 'assets/neuer-planet.jpg', {
+  //        emissiveColor: new BABYLON.Color3(0.1, 0.1, 0.1)
+  //      });
+  //
+  // 2. Himmelskörper mit `system.createBody` erstellen:
+  //    - Rufen Sie `system.createBody` mit einer Konfiguration auf.
+  //    - Wichtige Parameter:
+  //      - `name`: Eindeutiger Name (z.B. 'Jupiter').
+  //      - `parent`: Das Objekt, das umkreist wird (normalerweise `sun`).
+  //      - `orbitRadius`: Abstand zum `parent` in Simulationseinheiten.
+  //      - `diameter`: Größe des Planeten.
+  //      - `material`: Das zuvor erstellte Material.
+  //      - `axisTilt`: Achsenneigung in Grad, umgerechnet in Radiant (z.B. (3 * Math.PI) / 180 für 3 Grad).
+  //
+  // 3. Zeitliche Konfiguration in `computeTemporalConfig` hinzufügen:
+  //    - Fügen Sie eine neue Eigenschaft für die Umlaufzeit hinzu.
+  //    - Das Verhältnis basiert auf dem Erdjahr. Wenn ein Planet z.B. 12 Erdjahre für einen Umlauf braucht:
+  //      const jupiterOrbitMinutes = earthOrbitMinutes * 12;
+  //    - Fügen Sie auch die Eigenrotation hinzu (Dauer eines Tages).
+  //
+  // 4. Neue Konfiguration in `applyTemporalConfig` anwenden:
+  //    - Setzen Sie die Umlauf- und Rotationsperioden für das neue Objekt.
+  //    - Beispiel:
+  //      bodies.jupiter.setOrbitPeriod(config.jupiterOrbitMinutes);
+  //      bodies.jupiter.setRotationPeriod(config.jupiterDayMinutes);
+  //
+  // 5. Den neuen Körper zum `bodies`-Objekt hinzufügen:
+  //    - Fügen Sie den zurückgegebenen Wert von `createBody` zum `bodies`-Objekt hinzu,
+  //      damit er im Rest des Skripts leicht zugänglich ist.
+  //      const jupiter = system.createBody({...});
+  //      const bodies = { sun, earth, moon, satellite, mars, jupiter };
+  //
+  // Das folgende Beispiel für Mars dient als Vorlage.
 
   // Zweiter Planet (Mars) dient als Testfall für das flexible Design.
   const marsMaterial = createTexturedMaterial(scene, 'marsMat', 'assets/mars.jpg', {
@@ -360,6 +430,7 @@ function init() {
     material: marsMaterial,
     axisTilt: (25 * Math.PI) / 180
   });
+  createLabel(scene, 'marsLabel', 'Mars', mars);
 
   // Himmelskuppel erstellen, damit die Szene nicht im Leeren endet.
   createSkybox(scene);
